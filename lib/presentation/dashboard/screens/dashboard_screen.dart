@@ -54,7 +54,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildDashboard(BuildContext context, VfdData data) {
-    // Keep last N points for chart
     if (data.frequency > 0) {
       _freqSpots.add(FlSpot(_freqSpots.length.toDouble(), data.frequency));
       _currentSpots.add(FlSpot(_currentSpots.length.toDouble(), data.current));
@@ -64,100 +63,97 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       }
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final isTablet = constraints.maxWidth > 600;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isTablet = constraints.maxWidth > 600;
 
-      return RefreshIndicator(
-        onRefresh: () async => ref.invalidate(vfdDataProvider),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ConnectionStatusBar(isConnected: data.isConnected),
-              const SizedBox(height: 16),
-              
-              // Responsive Grid
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: isTablet ? 4 : 2,
-                childAspectRatio: 0.85,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                children: [
-                  VfdGaugeCard(title: 'Frequency', value: data.frequencyText, icon: Icons.speed, color: Colors.teal, gaugeValue: (data.frequency / 60.0).clamp(0.0, 1.0), subtitle: 'Hz'),
-                  VfdGaugeCard(title: 'Current', value: data.currentText, icon: Icons.electric_bolt, color: Colors.amber, gaugeValue: (data.current / 20.0).clamp(0.0, 1.0), subtitle: 'A'),
-                  VfdGaugeCard(title: 'Voltage', value: data.voltageText, icon: Icons.bolt, color: Colors.indigo, gaugeValue: (data.voltage / 500.0).clamp(0.0, 1.0), subtitle: 'V'),
-                  VfdGaugeCard(title: 'Power', value: data.powerText, icon: Icons.power, color: Colors.orangeAccent, gaugeValue: (data.power / 5.0).clamp(0.0, 1.0), subtitle: 'kW'),
-                ],
-              ),
-              
-              const SizedBox(height: 12),
-              // ... rest of the code (HourMeter + Chart) ...
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(vfdDataProvider),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ConnectionStatusBar(isConnected: data.isConnected),
+                const SizedBox(height: 16),
 
-            const SizedBox(height: 12),
-
-            // Hour meter + Alarm card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
+                // Responsive gauge grid
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: isTablet ? 4 : 2,
+                  childAspectRatio: 0.85,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
                   children: [
-                    const Icon(Icons.access_time, size: 36, color: Colors.teal),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    VfdGaugeCard(title: 'Frequency', value: data.frequencyText, icon: Icons.speed, color: Colors.teal, gaugeValue: (data.frequency / 60.0).clamp(0.0, 1.0), subtitle: 'Hz'),
+                    VfdGaugeCard(title: 'Current', value: data.currentText, icon: Icons.electric_bolt, color: Colors.amber, gaugeValue: (data.current / 20.0).clamp(0.0, 1.0), subtitle: 'A'),
+                    VfdGaugeCard(title: 'Voltage', value: data.voltageText, icon: Icons.bolt, color: Colors.indigo, gaugeValue: (data.voltage / 500.0).clamp(0.0, 1.0), subtitle: 'V'),
+                    VfdGaugeCard(title: 'Power', value: data.powerText, icon: Icons.power, color: Colors.orangeAccent, gaugeValue: (data.power / 5.0).clamp(0.0, 1.0), subtitle: 'kW'),
+                  ],
+                ),
+
+                const SizedBox(height: 12),
+
+                // Hour meter + Alarm card
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
                       children: [
-                        Text('Operation Time', style: Theme.of(context).textTheme.bodySmall),
-                        Text(
-                          data.hourText,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                color: Colors.teal,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        const Icon(Icons.access_time, size: 36, color: Colors.teal),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Operation Time', style: Theme.of(context).textTheme.bodySmall),
+                            Text(
+                              data.hourText,
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                    color: Colors.teal,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: data.alarmCode == 0
+                                ? Colors.green.withOpacity(0.2)
+                                : Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Status: ${data.alarmText}',
+                            style: TextStyle(
+                              color: data.alarmCode == 0 ? Colors.green : Colors.red,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: data.alarmCode == 0
-                            ? Colors.green.withOpacity(0.2)
-                            : Colors.red.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Status: ${data.alarmText}',
-                        style: TextStyle(
-                          color: data.alarmCode == 0 ? Colors.green : Colors.red,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 16),
+
+                // Trend Chart
+                VfdChart(
+                  freqSpots: _freqSpots,
+                  currentSpots: _currentSpots,
+                ),
+
+                const SizedBox(height: 16),
+              ],
             ),
-
-            const SizedBox(height: 16),
-
-            // Trend Chart
-            VfdChart(
-              freqSpots: _freqSpots,
-              currentSpots: _currentSpots,
-            ),
-
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
