@@ -64,73 +64,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       }
     }
 
-    return RefreshIndicator(
-      onRefresh: () async => ref.invalidate(vfdDataProvider),
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Connection Status
-            ConnectionStatusBar(isConnected: data.isConnected),
+    return LayoutBuilder(builder: (context, constraints) {
+      final isTablet = constraints.maxWidth > 600;
 
-            const SizedBox(height: 16),
-
-            // Gauge Cards Row
-            Row(
-              children: [
-                Expanded(
-                  child: VfdGaugeCard(
-                    title: 'Frequency',
-                    value: data.frequencyText,
-                    icon: Icons.speed,
-                    color: Colors.teal,
-                    gaugeValue: (data.frequency / 60.0).clamp(0.0, 1.0),
-                    subtitle: 'Hz',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: VfdGaugeCard(
-                    title: 'Current',
-                    value: data.currentText,
-                    icon: Icons.electric_bolt,
-                    color: Colors.amber,
-                    gaugeValue: (data.current / 20.0).clamp(0.0, 1.0),
-                    subtitle: 'A',
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            Row(
-              children: [
-                Expanded(
-                  child: VfdGaugeCard(
-                    title: 'Voltage',
-                    value: data.voltageText,
-                    icon: Icons.bolt,
-                    color: Colors.indigo,
-                    gaugeValue: (data.voltage / 500.0).clamp(0.0, 1.0),
-                    subtitle: 'V',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: VfdGaugeCard(
-                    title: 'Power',
-                    value: data.powerText,
-                    icon: Icons.power,
-                    color: Colors.orangeAccent,
-                    gaugeValue: (data.power / 5.0).clamp(0.0, 1.0),
-                    subtitle: 'kW',
-                  ),
-                ),
-              ],
-            ),
+      return RefreshIndicator(
+        onRefresh: () async => ref.invalidate(vfdDataProvider),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ConnectionStatusBar(isConnected: data.isConnected),
+              const SizedBox(height: 16),
+              
+              // Responsive Grid
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: isTablet ? 4 : 2,
+                childAspectRatio: 0.85,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                children: [
+                  VfdGaugeCard(title: 'Frequency', value: data.frequencyText, icon: Icons.speed, color: Colors.teal, gaugeValue: (data.frequency / 60.0).clamp(0.0, 1.0), subtitle: 'Hz'),
+                  VfdGaugeCard(title: 'Current', value: data.currentText, icon: Icons.electric_bolt, color: Colors.amber, gaugeValue: (data.current / 20.0).clamp(0.0, 1.0), subtitle: 'A'),
+                  VfdGaugeCard(title: 'Voltage', value: data.voltageText, icon: Icons.bolt, color: Colors.indigo, gaugeValue: (data.voltage / 500.0).clamp(0.0, 1.0), subtitle: 'V'),
+                  VfdGaugeCard(title: 'Power', value: data.powerText, icon: Icons.power, color: Colors.orangeAccent, gaugeValue: (data.power / 5.0).clamp(0.0, 1.0), subtitle: 'kW'),
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              // ... rest of the code (HourMeter + Chart) ...
 
             const SizedBox(height: 12),
 
